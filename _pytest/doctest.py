@@ -1,6 +1,6 @@
 """ discover and run doctests in modules and test files."""
 from __future__ import absolute_import, division, print_function
-
+import sys
 import traceback
 
 import pytest
@@ -103,6 +103,12 @@ class DoctestItem(pytest.Item):
 
     def runtest(self):
         _check_all_skipped(self.dtest)
+        # disable output capturing because otherwise we will lose our stdout to doctest (#985)
+        capman = self.config.pluginmanager.getplugin("capturemanager")
+        if capman:
+            out, err = capman.suspend_global_capture(in_=True)
+            sys.stdout.write(out)
+            sys.stdout.write(err)
         self.runner.run(self.dtest)
 
     def repr_failure(self, excinfo):
